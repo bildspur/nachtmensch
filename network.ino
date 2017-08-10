@@ -203,7 +203,7 @@ void loopNetwork()
     Serial.println("lost connection...");
     wait(CONNECTION_ERROR_WAIT_TIME);
 
-    initWiFi();
+    setupNetwork();
   }
 }
 
