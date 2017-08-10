@@ -2,6 +2,7 @@
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
 #include <ESP8266mDNS.h>
+#include <IPAddress.h>
 
 #define DEVICE_IDENTIFIER "nachtmensch"
 #define OSC_LOCAL_PORT 8000
@@ -11,12 +12,14 @@
 #define CONNECTION_ERROR_WAIT_TIME 5000
 
 // wifi credentials
-const char *ssid = "Nachtmensch";
-const char *password = "nightowl";
+const char *ssid = "nachtmensch";
+const char *password = "";
 
 char deviceName[25];
 
 int connectionWaitTimes = 0;
+
+WiFiMode_t wifiMode = WIFI_STA;
 
 WiFiUDP Udp;
 
@@ -48,9 +51,23 @@ void setupDeviceName()
 
 void initWiFi()
 {
-  WiFi.mode(WIFI_STA);
   WiFi.hostname(deviceName);
+
+  // check if wifi is already available
+}
+
+void initSTA()
+{
+  wifiMode = WIFI_STA;
+  WiFi.mode(wifiMode);
   WiFi.begin(ssid, password);
+}
+
+void initAP()
+{
+  wifiMode = WIFI_AP;
+  WiFi.mode(wifiMode);
+  WiFi.softAP(ssid, password);
 }
 
 void setupWiFi()
@@ -82,7 +99,7 @@ void setupWiFi()
 
   // print out relevant information
   Serial.print("Local IP address: ");
-  Serial.println(WiFi.localIP());
+  Serial.println(getIPAddress());
 
   Serial.print("Mac Address: ");
   Serial.println(WiFi.macAddress());
@@ -98,13 +115,19 @@ void setupMDNS()
   // Add service to MDNS-SD
   MDNS.addService("osc", "udp", OSC_LOCAL_PORT);
   MDNS.addServiceTxt("osc", "udp", "mac", WiFi.macAddress());
-
-  MDNS.addService("http", "tcp", 80);
 }
 
 void setupUDPServer()
 {
   Udp.begin(OSC_LOCAL_PORT);
+}
+
+String getIPAddress()
+{
+  if (wifiMode == WIFI_AP)
+    return WiFi.softAPIP().toString();
+  else
+    return WiFi.localIP().toString();
 }
 
 void loopNetwork()
