@@ -28,7 +28,7 @@ WiFiUDP Udp;
 void setupNetwork()
 {
   setupDeviceName();
-  setupWiFi();
+  initWiFi();
 
   setupUDPServer();
   setupMDNS();
@@ -57,11 +57,16 @@ void initWiFi()
 
   // check if wifi is already available
   if (wifiExists())
+  {
     initSTA();
+    setupSTA();
+  }
   else
+  {
     initAP();
+  }
 
-  setupWiFi();
+  printNetworkInformation();
 }
 
 boolean wifiExists()
@@ -87,7 +92,8 @@ boolean wifiExists()
 
     if (!isWifiAvaialable)
     {
-      Serial.println("nope.");
+      Serial.print(scanCount + 1);
+      Serial.println(" -> nope.");
       wait(1000);
     }
     else
@@ -103,15 +109,6 @@ boolean wifiExists()
   return isWifiAvaialable;
 }
 
-void initSTA()
-{
-  Serial.println("init STA mode...");
-
-  wifiMode = WIFI_STA;
-  WiFi.mode(wifiMode);
-  WiFi.begin(ssid, password);
-}
-
 void initAP()
 {
   Serial.println("init AP mode...");
@@ -121,11 +118,18 @@ void initAP()
   WiFi.softAP(ssid, password);
 }
 
-void setupWiFi()
+void initSTA()
+{
+  Serial.println("init STA mode...");
+
+  wifiMode = WIFI_STA;
+  WiFi.mode(wifiMode);
+  WiFi.begin(ssid, password);
+}
+
+void setupSTA()
 {
   Serial.print("trying to connect...");
-  initWiFi();
-
   ledBlink();
 
   // wait till wifi is connected
@@ -137,7 +141,7 @@ void setupWiFi()
     {
       Serial.println();
       Serial.println("re-init wifi...");
-      initWiFi();
+      initSTA();
       connectionWaitTimes = 0;
     }
 
@@ -145,8 +149,17 @@ void setupWiFi()
   }
 
   Serial.println();
+}
 
+void printNetworkInformation()
+{
   // print out relevant information
+  Serial.print("WiFi Mode: ");
+  Serial.println(wifiMode);
+
+  Serial.print("WiFi State: ");
+  Serial.println(WiFi.status());
+
   Serial.print("Local IP address: ");
   Serial.println(getIPAddress());
 
@@ -184,13 +197,13 @@ void loopNetwork()
   loopUdp();
 
   // check for connection loss
-  if (WiFi.status() != WL_CONNECTED)
+  if (wifiMode == WIFI_STA && WiFi.status() != WL_CONNECTED)
   {
     ledError();
     Serial.println("lost connection...");
     wait(CONNECTION_ERROR_WAIT_TIME);
 
-    setupNetwork();
+    initWiFi();
   }
 }
 

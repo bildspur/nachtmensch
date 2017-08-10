@@ -9,7 +9,7 @@ void setupOSC()
 
 void sendRestartReason()
 {
-  Serial.print("Restart reason:");
+  Serial.print("Restart reason: ");
   Serial.println(ESP.getResetReason());
 
   rst_info *resetInfo = ESP.getResetInfoPtr();

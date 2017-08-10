@@ -11,11 +11,24 @@ void loopPIR()
   int input = digitalRead(PIR_PIN);
   if (input == HIGH && pirState == LOW) {
     pirState = HIGH;
-    Serial.println("PIR: Motion detected!");
+    motionPIR();
   }
   else if (input == LOW && pirState == HIGH)
   {
     pirState = LOW;
-    Serial.println("PIR: No motion!");
+    noMotionPIR();
   }
 }
+
+void motionPIR()
+{
+  Serial.println("PIR: Motion detected!");
+  wireON();
+}
+
+void noMotionPIR()
+{
+  Serial.println("PIR: No motion!");
+  wireOFF();
+}
+
