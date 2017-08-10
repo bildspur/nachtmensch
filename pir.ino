@@ -1,0 +1,7 @@
+void setupPIR()
+{
+}
+
+void loopPIR()
+{
+}
