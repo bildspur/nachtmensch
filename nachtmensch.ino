@@ -53,7 +53,7 @@ void loop() {
   loopInfo();
 
   loopPIR();
- 
+
   loopNetwork();
   loopOTA();
 }
@@ -62,11 +62,17 @@ void softReset() {
   ESP.restart();
 }
 
+void wait()
+{
+  wait(DEFAULT_LOOP_DELAY);
+}
+
 void wait(unsigned long waitTime)
 {
   unsigned long previousMillis = millis();
   while (millis() - previousMillis <= waitTime)
   {
+    ESP.wdtFeed();
     loopInfo();
     delay(DEFAULT_LOOP_DELAY);
   }

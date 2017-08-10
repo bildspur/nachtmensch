@@ -7,6 +7,8 @@
 #define DEVICE_IDENTIFIER "nachtmensch"
 #define OSC_LOCAL_PORT 8000
 
+#define MAX_SCAN_COUNT 3
+
 #define CONNECTION_WAIT_TIMES 5000
 
 #define CONNECTION_ERROR_WAIT_TIME 5000
@@ -54,10 +56,57 @@ void initWiFi()
   WiFi.hostname(deviceName);
 
   // check if wifi is already available
+  if (wifiExists())
+    initSTA();
+  else
+    initAP();
+
+  setupWiFi();
+}
+
+boolean wifiExists()
+{
+  Serial.println("check if wifi exists...");
+  ledBlink();
+
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect();
+  wait(100);
+
+  int scanCount = 0;
+  boolean isWifiAvaialable = false;
+
+  while (!isWifiAvaialable && scanCount < MAX_SCAN_COUNT)
+  {
+    int n = WiFi.scanNetworks();
+    for (int i = 0; i < n; ++i)
+    {
+      if (WiFi.SSID(i).equals(ssid))
+        isWifiAvaialable = true;
+    }
+
+    if (!isWifiAvaialable)
+    {
+      Serial.println("nope.");
+      wait(1000);
+    }
+    else
+    {
+      Serial.print(ssid);
+      Serial.println(" found!");
+    }
+
+    scanCount++;
+  }
+
+  ledOFF();
+  return isWifiAvaialable;
 }
 
 void initSTA()
 {
+  Serial.println("init STA mode...");
+
   wifiMode = WIFI_STA;
   WiFi.mode(wifiMode);
   WiFi.begin(ssid, password);
@@ -65,6 +114,8 @@ void initSTA()
 
 void initAP()
 {
+  Serial.println("init AP mode...");
+
   wifiMode = WIFI_AP;
   WiFi.mode(wifiMode);
   WiFi.softAP(ssid, password);
@@ -79,7 +130,6 @@ void setupWiFi()
 
   // wait till wifi is connected
   while (WiFi.status() != WL_CONNECTED) {
-    loopInfo();
     connectionWaitTimes++;
 
     // reset wifi
@@ -91,8 +141,7 @@ void setupWiFi()
       connectionWaitTimes = 0;
     }
 
-    ESP.wdtFeed();
-    delay(DEFAULT_LOOP_DELAY);
+    wait();
   }
 
   Serial.println();
